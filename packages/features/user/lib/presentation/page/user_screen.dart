@@ -64,8 +64,29 @@ class UserScreen extends StatelessWidget {
   }
 }
 
-class HomeBody extends StatelessWidget {
+class HomeBody extends StatefulWidget {
   const HomeBody({super.key});
+
+  @override
+  State<HomeBody> createState() => _HomeBodyState();
+}
+
+class _HomeBodyState extends State<HomeBody> {
+  final ScrollController _scrollController = ScrollController();
+
+  void _scrollListener() {
+    if (_scrollController.offset >=
+            _scrollController.position.maxScrollExtent &&
+        !_scrollController.position.outOfRange) {
+      context.read<UserBloc>().loadMore();
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_scrollListener);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -77,28 +98,41 @@ class HomeBody extends StatelessWidget {
           error: (message) => IdleNoItemCenter(title: message),
           loaded: (users, page, hasReachedMax, onLoadMore) {
             return ListView.builder(
+              controller: _scrollController,
               itemCount: users.length,
               itemBuilder: (context, index) {
                 final user = users[index];
-                return Clickable(
-                  onClick: () {},
-                  child: ListTile(
-                    leading: CircleAvatar(
-                      backgroundImage: NetworkImage(user.avatar ?? ""),
-                    ),
-                    title: Text(
-                      "${user.firstName} ${user.lastName}",
-                      style: MyTheme.style.title.copyWith(
-                        fontSize: AppSetting.setFontSize(45),
+                return Column(
+                  children: [
+                    Clickable(
+                      onClick: () {},
+                      child: ListTile(
+                        leading: CircleAvatar(
+                          backgroundImage: NetworkImage(user.avatar ?? ""),
+                        ),
+                        title: Text(
+                          "${user.firstName} ${user.lastName}",
+                          style: MyTheme.style.title.copyWith(
+                            fontSize: AppSetting.setFontSize(45),
+                          ),
+                        ),
+                        subtitle: Text(
+                          user.email ?? "",
+                          style: MyTheme.style.subtitle.copyWith(
+                            fontSize: AppSetting.setFontSize(35),
+                          ),
+                        ),
                       ),
                     ),
-                    subtitle: Text(
-                      user.email ?? "",
-                      style: MyTheme.style.subtitle.copyWith(
-                        fontSize: AppSetting.setFontSize(35),
+                    if (index == users.length - 1 && onLoadMore) ...[
+                      Padding(
+                        padding: EdgeInsets.symmetric(
+                          vertical: AppSetting.setHeight(20),
+                        ),
                       ),
-                    ),
-                  ),
+                      LoadingListView(),
+                    ],
+                  ],
                 );
               },
             );

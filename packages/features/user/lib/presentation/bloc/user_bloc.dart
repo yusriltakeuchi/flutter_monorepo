@@ -22,7 +22,7 @@ class UserBloc extends Cubit<UserState> {
         (users) => emit(UserState.loaded(
           users: users,
           page: 1,
-          hasReachedMax: true,
+          hasReachedMax: false,
           onLoadMore: false,
         )),
       );
@@ -52,7 +52,7 @@ class UserBloc extends Cubit<UserState> {
           return;
         }
 
-        final filter = {'page': page};
+        final filter = {'page': page+1};
         final result = await _getUserUseCase.call(params: filter);
         result.fold(
           (error) => emit(UserState.error(error.message)),
