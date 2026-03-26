@@ -1,131 +1,179 @@
 # Flutter Monorepo
 
-Monorepo dengan **Melos** + **Dart pub workspace**. Semua versi dependency terpusat di root `pubspec.yaml`.
+Ini adalah template **Flutter monorepo** yang menggunakan **Melos** dan **Dart pub workspace**.
 
-<p align="center">
-  <img src="screenshot/light_mode.png" width="20%" alt="Light Mode"/>
-  &nbsp;&nbsp;
-  <img src="screenshot/dark_mode.png" width="20%" alt="Dark Mode"/>
-</p>
+Semua packages (core, shared, features) dikelola dalam satu repository. Versi dependency cukup ditulis **satu kali** di root — semua packages otomatis mengikuti.
+
+**Tech Stack:**
+- 🗂 [Melos](https://melos.invertase.io/) — monorepo management & scripts
+- 🔀 [auto_route](https://pub.dev/packages/auto_route) — routing & code generation
+- 🧊 [freezed](https://pub.dev/packages/freezed) — immutable models
+- 💉 [get_it](https://pub.dev/packages/get_it) — dependency injection
+- 🧩 [flutter_bloc](https://pub.dev/packages/flutter_bloc) — state management
+- 🖼 [flutter_gen](https://pub.dev/packages/flutter_gen) — type-safe assets
 
 ---
 
-## 📁 Struktur
+## 📁 Struktur Project
 
 ```
 flutter_monorepo/
-├── pubspec.yaml          ← semua versi dependency di sini
-├── melos.yaml            ← konfigurasi Melos
-├── Makefile
+├── pubspec.yaml          ← semua versi dependency terpusat di sini
+├── melos.yaml            ← konfigurasi Melos & scripts
+├── Makefile              ← shortcut commands
+├── tools/
+│   └── create_feature.sh ← script generator feature baru
 ├── apps/
-│   └── mobile_app/
+│   └── mobile_app/       ← Flutter app (entry point)
+│       └── lib/
+│           ├── routing/  ← AppRouter (assembles semua feature routes)
+│           └── injection/← GetIt setup
 └── packages/
-    ├── core/             ← network, utils (pure Dart)
-    ├── config/           ← konstanta & konfigurasi app
-    ├── shared_ui/        ← widgets, theme, dan assets (icons, images)
-    ├── shared_extension/ ← Dart/Flutter extensions
-    └── features/
+    ├── core/             ← network, base repository, utils (pure Dart)
+    ├── config/           ← konstanta app (ukuran, warna, setting)
+    ├── shared_ui/        ← reusable widgets, theme, dan assets
+    ├── shared_extension/ ← Dart/Flutter extension methods
+    └── features/         ← satu folder per fitur bisnis
+        ├── theme/
         ├── user/
         └── ...
 ```
 
+> Setiap **feature** adalah Flutter package tersendiri dengan struktur DDD (domain, infrastructure, presentation) dan router-nya sendiri.
+
 ---
 
-## ⚙️ Setup
+## ⚙️ Setup Awal
+
+### 1. Install Melos (sekali saja)
 
 ```bash
-# Install Melos (sekali saja)
 dart pub global activate melos
+```
 
-# Sync semua packages
+### 2. Install semua dependencies
+
+```bash
+# Jalankan dari root monorepo
 flutter pub get
 ```
+
+> Karena menggunakan Dart pub workspace, `flutter pub get` di root otomatis men-sync **semua packages** sekaligus.
 
 ---
 
 ## 🚀 Jalankan App
 
 ```bash
+# Shortcut via Makefile
 make run-mobile
 
-# atau
+# Atau pilih device tertentu
 cd apps/mobile_app && flutter run -d <device_id>
 ```
 
 ---
 
-## 🏗️ Build Runner
+## 📱 Preview
+
+<p align="center">
+  <img src="screenshot/light_mode.png" width="30%" alt="Light Mode"/>
+  &nbsp;&nbsp;&nbsp;
+  <img src="screenshot/dark_mode.png" width="30%" alt="Dark Mode"/>
+</p>
+
+---
+
+## 🏗️ Build Runner (Code Generation)
+
+Build runner digunakan untuk generate kode dari annotation (`@RoutePage`, `@freezed`, dll) dan asset.
 
 ```bash
-# Build semua packages
+# Generate semua packages sekaligus (dari root)
 melos run build
 
-# Build satu package saja
+# Atau hanya satu package
 cd packages/features/user
 dart run build_runner build --delete-conflicting-outputs
 ```
 
-Kapan perlu dijalankan: setelah tambah `@RoutePage()`, `@freezed`, `@JsonSerializable`, atau asset baru.
+**Kapan perlu dijalankan?**
+
+| Kondisi | Perlu build? |
+|---|---|
+| Tambah `@RoutePage()` baru | ✅ |
+| Tambah `@freezed` / `@JsonSerializable` | ✅ |
+| Tambah asset baru ke `shared_ui/assets/` | ✅ |
+| Edit UI / logika biasa | ❌ |
 
 ---
 
 ## 🖼️ Assets
 
-Asset disimpan di `packages/shared_ui/assets/` dan diakses melalui `shared_ui`.
+Semua asset (icon, gambar) disimpan di `packages/shared_ui/assets/` dan sudah di-export melalui `shared_ui` — tidak perlu package tambahan.
+
+### Struktur folder asset
+
+```
+packages/shared_ui/assets/
+├── icons/    ← .png, .svg
+└── images/   ← .png, .jpg
+```
 
 ### Tambah asset baru
 
 ```bash
-# Tambah file ke folder yang sesuai
+# 1. Taruh file di folder yang sesuai
 cp icon_baru.png packages/shared_ui/assets/icons/icon_baru.png
 
-# Regenerate
+# 2. Regenerate
 melos run build
 ```
 
 ### Pakai di widget
 
-`shared_ui` sudah di-import di setiap feature, jadi langsung pakai:
+Karena `shared_ui` sudah jadi dependency di setiap feature, langsung pakai tanpa import tambahan:
 
 ```dart
 import 'package:shared_ui/shared_ui.dart';
 
+// Tampilkan sebagai Image widget
 Assets.icons.iconBaru.image(width: 24)
 Assets.images.logoFull.image(fit: BoxFit.cover)
 
-// Sebagai ImageProvider
+// Sebagai ImageProvider (untuk DecorationImage, CircleAvatar, dll)
 DecorationImage(image: Assets.images.logoFull.provider())
 ```
-
-> ⚠️ Setelah tambah file asset, **wajib** jalankan `melos run build` agar ter-generate.
 
 ---
 
 ## 📦 Buat Package Baru
 
-**Dart package** (tanpa Flutter, contoh: `core`):
+Gunakan ini kalau ingin tambah shared package baru (bukan feature).
+
+**Dart package** — tanpa Flutter (contoh: `core`, `shared_extension`):
 ```bash
 cd packages
 dart create -t package-simple <nama> --force
 ```
 
-**Flutter package** (contoh: `shared_ui`, `config`):
+**Flutter package** — butuh Flutter SDK (contoh: `shared_ui`, `config`):
 ```bash
 cd packages
 flutter create --template=package <nama>
 ```
 
-Setelah dibuat, edit `pubspec.yaml`-nya — tambahkan `resolution: workspace` dan hapus semua nomor versi (ikut root):
+Setelah dibuat, **edit `pubspec.yaml`** hasil generate:
 
 ```yaml
 name: <nama>
-resolution: workspace       # ← wajib ada
+resolution: workspace       # ← wajib ditambahkan
 
 environment:
   sdk: ^3.9.2
 
 dependencies:
-  dio:                      # ← tanpa versi
+  dio:                      # ← tulis tanpa versi, ikut root
   flutter_bloc:
 
 dev_dependencies:
@@ -133,11 +181,10 @@ dev_dependencies:
   build_runner:
 ```
 
-Lalu daftarkan di root `pubspec.yaml` bagian `workspace`:
+Lalu daftarkan di root `pubspec.yaml`:
 ```yaml
 workspace:
-  - packages/<nama>    # ← tambahkan
-  - apps/mobile_app
+  - packages/<nama>         # ← tambahkan
 ```
 
 ```bash
@@ -148,7 +195,7 @@ flutter pub get
 
 ## 🚀 Buat Feature Baru
 
-### 1. Jalankan script
+Feature adalah Flutter package dengan struktur DDD + routing sendiri. Cukup jalankan satu command:
 
 ```bash
 melos run create:feature -- <feature_name>
@@ -158,13 +205,13 @@ melos run create:feature -- product
 melos run create:feature -- product_order   # snake_case → PascalCase otomatis
 ```
 
-Script akan otomatis membuat:
-- Folder DDD (`entities`, `repositories`, `usecase`, `datasource`, `bloc`, `page`, `routing`)
-- `pubspec.yaml` lengkap dengan semua dependencies
-- Template `<feature>_screen.dart` dengan `@RoutePage()`
-- Template `<feature>_route.dart` dengan `@AutoRouterConfig`
+Script otomatis membuat:
+- ✅ Folder DDD lengkap (`entities`, `repositories`, `usecase`, `datasource`, `bloc`, `page`, `routing`)
+- ✅ `pubspec.yaml` dengan semua dependency yang dibutuhkan
+- ✅ Template `<feature>_screen.dart` dengan `@RoutePage()`
+- ✅ Template `<feature>_route.dart` dengan `@AutoRouterConfig`
 
-Struktur hasil:
+Struktur yang terbuat:
 ```
 features/<feature>/lib/
 ├── domain/
@@ -177,20 +224,18 @@ features/<feature>/lib/
 ├── presentation/
 │   ├── bloc/
 │   └── page/
-│       └── <feature>_screen.dart
 └── routing/
-    └── <feature>_route.dart
 ```
 
-### 2. Daftarkan ke workspace & mobile_app
+### Setelah script selesai, lakukan 2 langkah manual:
 
-Root `pubspec.yaml`:
+**1. Daftarkan di root `pubspec.yaml`:**
 ```yaml
 workspace:
-  - packages/features/<feature>   # ← tambahkan
+  - packages/features/<feature>
 ```
 
-`apps/mobile_app/pubspec.yaml`:
+**2. Tambahkan sebagai dependency di `apps/mobile_app/pubspec.yaml`:**
 ```yaml
 dependencies:
   <feature>:
@@ -205,30 +250,28 @@ flutter pub get
 
 ## 🗺️ Setup Router Feature
 
-### 1. Screen — pakai `@RoutePage()`
+Setelah feature dibuat, hubungkan routernya ke `AppRouter` di `mobile_app`.
+
+### Cara kerjanya
+
+Setiap feature punya **router sendiri** (`FeatureRoute`) yang menyimpan daftar screen-nya. `AppRouter` di `mobile_app` cukup **menyebar (spread)** routes dari tiap feature.
+
+### 1. Screen sudah ada templatenya — isi saja
 
 ```dart
 // lib/presentation/page/<feature>_screen.dart
-import 'package:auto_route/auto_route.dart';
-import 'package:flutter/material.dart';
-
 @RoutePage()
 class ProductScreen extends StatelessWidget {
-  const ProductScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) => const Scaffold();
+  // ...
 }
 ```
 
-### 2. Router config feature
-
-Setiap feature punya router sendiri yang **menyimpan semua routes-nya**.
+### 2. Router feature sudah ada templatenya — isi routes
 
 ```dart
 // lib/routing/<feature>_route.dart
 import 'package:auto_route/auto_route.dart';
-import 'package:product/routing/product_route.gr.dart';   // ← import .gr.dart milik sendiri
+import 'package:product/routing/product_route.gr.dart';  // ← file hasil generate
 
 @AutoRouterConfig(replaceInRouteName: 'Screen|Page,Route')
 class ProductFeatureRoute extends RootStackRouter {
@@ -237,7 +280,7 @@ class ProductFeatureRoute extends RootStackRouter {
 
   @override
   List<AutoRoute> get routes => [
-    AutoRoute(page: ProductRoute.page, initial: true),   // ← define routes di sini
+    AutoRoute(page: ProductRoute.page, initial: true),
   ];
 
   @override
@@ -249,34 +292,25 @@ class ProductFeatureRoute extends RootStackRouter {
 
 ```bash
 melos run build
-# → <feature>_route.gr.dart ter-generate
+# → product_route.gr.dart ter-generate
 ```
 
-### 4. Daftarkan di AppRouter (mobile_app)
-
-AppRouter cukup **spread** routes dari tiap feature — tidak perlu import `.gr.dart` secara langsung.
+### 4. Daftarkan di AppRouter
 
 ```dart
 // apps/mobile_app/lib/routing/route.dart
-import 'package:auto_route/auto_route.dart';
 import 'package:user/routing/user_route.dart';
-import 'package:product/routing/product_route.dart';   // ← import router class feature
+import 'package:product/routing/product_route.dart';  // ← tambahkan
 
 part 'route.gr.dart';
 
 @AutoRouterConfig(replaceInRouteName: 'Screen|Page,Route')
 class AppRouter extends RootStackRouter {
   @override
-  RouteType get defaultRouteType => const RouteType.cupertino();
-
-  @override
   List<AutoRoute> get routes => [
     ...UserFeatureRoute().routes,
-    ...ProductFeatureRoute().routes,   // ← spread routes feature baru
+    ...ProductFeatureRoute().routes,  // ← tambahkan
   ];
-
-  @override
-  List<AutoRouteGuard> get guards => [];
 }
 ```
 
@@ -289,19 +323,21 @@ make run-mobile
 
 ## 💉 Aturan Dependencies
 
-- **Versi hanya boleh ada di root `pubspec.yaml`**
-- Package individual cukup tulis nama tanpa versi
+> **Versi dependency hanya boleh ditulis di root `pubspec.yaml`.**  
+> Package individual cukup tulis nama saja — versi diambil otomatis dari root.
 
 ```yaml
-# ✅ Benar (di package individual)
+# ✅ Benar — di package individual
 dependencies:
   auto_route:
   flutter_bloc:
 
-# ❌ Salah
+# ❌ Salah — jangan tulis versi di package individual
 dependencies:
   auto_route: ^11.1.0
 ```
+
+Kalau butuh package baru, tambahkan versinya di root dulu, baru referensikan tanpa versi di package yang butuh.
 
 ---
 
@@ -309,9 +345,9 @@ dependencies:
 
 | Command | Fungsi |
 |---|---|
-| `melos bootstrap` | Sync semua packages |
-| `flutter pub get` | Sync semua dependencies |
-| `make run-mobile` | Run mobile app |
-| `melos run build` | Code generation (build_runner) |
+| `flutter pub get` | Sync semua dependencies workspace |
+| `make run-mobile` | Jalankan mobile app |
+| `melos run build` | Code generation (build_runner semua packages) |
+| `melos run create:feature -- <name>` | Buat feature baru otomatis |
 | `melos run format:select` | Format semua Flutter packages |
 
