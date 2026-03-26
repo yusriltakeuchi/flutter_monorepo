@@ -36,7 +36,7 @@ dependencies:
   get_it:
 
   # Routing
-  auto_route: ^11.1.0
+  auto_route:
 
   # Packages module from monorepo
   core:
