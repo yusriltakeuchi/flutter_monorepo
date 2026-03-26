@@ -2,6 +2,12 @@
 
 Monorepo dengan **Melos** + **Dart pub workspace**. Semua versi dependency terpusat di root `pubspec.yaml`.
 
+<p align="center">
+  <img src="screenshot/light_mode.png" width="45%" alt="Light Mode"/>
+  &nbsp;&nbsp;
+  <img src="screenshot/dark_mode.png" width="45%" alt="Dark Mode"/>
+</p>
+
 ---
 
 ## 📁 Struktur

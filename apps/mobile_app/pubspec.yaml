@@ -47,6 +47,7 @@ dependencies:
     path: ../../packages/config
   shared_extension:
     path: ../../packages/shared_extension
+
   # Features module from monorepo
   user:
     path: ../../packages/features/user
