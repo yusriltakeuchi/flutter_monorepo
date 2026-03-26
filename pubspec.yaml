@@ -1,0 +1,69 @@
+name: flutter_monorepo
+description: A simple command-line application.
+version: 1.0.0
+publish_to: none
+# repository: https://github.com/my_org/my_repo
+
+environment:
+  sdk: ^3.9.2
+
+workspace:
+  - packages/core
+  - packages/shared_ui
+  - packages/shared_extension
+  - packages/config
+  - packages/features/user
+  - packages/features/theme
+  - apps/mobile_app
+
+# Add regular dependencies here.
+dependencies:
+  # Generator
+  freezed_annotation: ^3.1.0
+
+  # Network
+  dio: ^5.9.2
+  dio_smart_retry: ^7.0.1
+  connectivity_plus: ^7.0.0
+  dartz: ^0.10.1
+
+  # Local Storage
+  shared_preferences: ^2.5.5
+  # Routing
+  auto_route: ^11.1.0
+  # Styling
+  flutter_screenutil: ^5.9.3
+  google_fonts: ^8.0.2
+  # Dependency Injection
+  get_it: ^9.2.1
+  # State Management
+  flutter_bloc: ^9.1.1
+  # Logging
+  logger: ^2.7.0
+  # Others
+  intl: ^0.20.2
+
+dev_dependencies:
+  lints: ^6.0.0
+  flutter_lints: ^6.0.0
+  melos: ^7.5.0
+  build_runner: ^2.10.4
+  json_serializable: ^6.9.4
+  auto_route_generator: ^10.5.0
+  freezed: ^3.2.3
+
+melos:
+  scripts:
+
+    app:mobile:
+      run: cd apps/mobile_app && flutter run $MELOS_ARGS
+      description: Run the mobile app
+
+    format:select:
+      run: melos format
+      description: Format all Flutter packages in this project
+      packageFilters:
+        flutter: true
+
+    build:
+      run: melos exec --concurrency=1 --depends-on="build_runner" -- dart run build_runner build --delete-conflicting-outputs

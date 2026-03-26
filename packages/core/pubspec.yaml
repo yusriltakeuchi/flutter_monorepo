@@ -1,0 +1,23 @@
+name: core
+description: A starting point for Dart libraries or applications.
+version: 1.0.0
+resolution: workspace
+publish_to: none
+# repository: https://github.com/my_org/my_repo
+
+environment:
+  sdk: ^3.9.2
+
+# Add regular dependencies here.
+dependencies:
+  dio:
+  dio_smart_retry:
+  connectivity_plus:
+  dartz:
+  intl:
+  shared_preferences:
+  get_it:
+
+dev_dependencies:
+  lints: ^6.0.0
+  build_runner:
