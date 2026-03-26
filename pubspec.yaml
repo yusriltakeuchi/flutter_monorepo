@@ -14,6 +14,7 @@ workspace:
   - packages/config
   - packages/features/user
   - packages/features/theme
+  - packages/features/auth
   - apps/mobile_app
 
 # Add regular dependencies here.

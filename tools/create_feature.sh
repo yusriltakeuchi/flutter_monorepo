@@ -74,6 +74,7 @@ dev_dependencies:
   json_serializable:
 
 flutter:
+# Flutter main
 EOF
 
 # 5. Create Screen template
@@ -115,6 +116,7 @@ class ${FEATURE_CLASS}FeatureRoute extends RootStackRouter {
   List<AutoRouteGuard> get guards => [];
 }
 EOF
+
 
 echo ""
 echo "✅ Feature '$FEATURE' created!"
