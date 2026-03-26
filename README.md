@@ -148,24 +148,23 @@ flutter pub get
 
 ## 🚀 Buat Feature Baru
 
-### 1. Buat package
+### 1. Jalankan script
 
 ```bash
-cd packages/features
-flutter create --template=package <feature>
+melos run create:feature -- <feature_name>
+
+# Contoh
+melos run create:feature -- product
+melos run create:feature -- product_order   # snake_case → PascalCase otomatis
 ```
 
-### 2. Buat struktur DDD
+Script akan otomatis membuat:
+- Folder DDD (`entities`, `repositories`, `usecase`, `datasource`, `bloc`, `page`, `routing`)
+- `pubspec.yaml` lengkap dengan semua dependencies
+- Template `<feature>_screen.dart` dengan `@RoutePage()`
+- Template `<feature>_route.dart` dengan `@AutoRouterConfig`
 
-```bash
-# Jalankan dari root monorepo
-FEATURE=<nama_feature>
-
-mkdir -p packages/features/$FEATURE/lib/{domain/{entities,repositories,usecase},infrastructure/{datasource,repositories},presentation/{page,bloc},routing}
-touch packages/features/$FEATURE/lib/presentation/page/${FEATURE}_screen.dart
-touch packages/features/$FEATURE/lib/routing/${FEATURE}_route.dart
-```
-
+Struktur hasil:
 ```
 features/<feature>/lib/
 ├── domain/
@@ -178,39 +177,12 @@ features/<feature>/lib/
 ├── presentation/
 │   ├── bloc/
 │   └── page/
+│       └── <feature>_screen.dart
 └── routing/
+    └── <feature>_route.dart
 ```
 
-### 3. Edit `pubspec.yaml` feature
-
-```yaml
-name: <feature>
-resolution: workspace
-
-environment:
-  sdk: ^3.9.2
-  flutter: ">=1.17.0"
-
-dependencies:
-  flutter:
-    sdk: flutter
-  auto_route:
-  shared_ui:
-    path: ../../shared_ui
-  config:
-    path: ../../config
-  shared_extension:
-    path: ../../shared_extension
-
-dev_dependencies:
-  flutter_test:
-    sdk: flutter
-  flutter_lints:
-  auto_route_generator:
-  build_runner:
-```
-
-### 4. Daftarkan ke workspace & mobile_app
+### 2. Daftarkan ke workspace & mobile_app
 
 Root `pubspec.yaml`:
 ```yaml
